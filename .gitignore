@@ -1,0 +1,35 @@
+# Build directories
+build/
+bin/
+out/
+CMakeSettings.json
+.vs/
+*.user
+
+# Output artifacts from runs and traces
+results/*.csv
+results/*.txt
+results/*.etl
+!results/.gitkeep
+
+# Windows Performance traces and symbol cache
+*.etl
+*.etl.old
+*.etl.NGENPDB/
+*.etl.NGenPDB/
+*.pdb
+*.ilk
+
+# Compilation outputs
+*.obj
+*.o
+*.a
+*.lib
+*.dll
+*.exe
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,61 @@
+name: Windows C++20 Build & Test
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & Test (Windows MSVC x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSVC developer environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Project (Release)
+        run: |
+          cmake --build build --config Release --parallel
+
+      - name: Run CTest Unit Tests
+        run: |
+          ctest --test-dir build -C Release --output-on-failure
+
+      - name: Execute CLI & Workload Smoke Test
+        run: |
+          .\build\Release\perf_lab.exe --mode compare --threads 4 --operations 50000 --runs 2 --output-dir results
+
+      - name: Verify CSV & Summary Outputs Exist
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "results/benchmark_results.csv")) {
+            throw "benchmark_results.csv was not generated!"
+          }
+          if (-not (Test-Path "results/benchmark_summary.txt")) {
+            throw "benchmark_summary.txt was not generated!"
+          }
+          Get-Content "results/benchmark_summary.txt"
+
+      - name: Upload Build and Test Artifacts on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-ci-failure-logs
+          path: |
+            build/Testing/Temporary/
+            results/
